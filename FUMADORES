@@ -1,0 +1,95 @@
+program FUMADORES;
+
+var espera1 : semaphore;
+	espera2 : semaphore;
+	espera3 : semaphore;
+	otraronda : semaphore;
+	
+	
+
+process F1;
+begin
+	repeat
+	writeln('Fumador 1 tiene el tabaco');	
+	
+		wait(espera1);					{El fumador 1 espera a que el agente haya puesto el papel y los fosforos}
+		
+	writeln('Fumador 1 termina de fumar ');		
+	signal(otraronda);		
+	forever;
+end;
+
+process F2;
+begin
+	repeat
+	writeln('Fumador 2 tiene el papel');	
+	
+		wait(espera2);					{El fumador 2 espera a que el agente haya puesto el tabaco y los fosforos}
+		
+			
+	writeln('Fumador 2 termina de fumar ');		
+	signal(otraronda);
+	forever;
+end;
+
+
+process F3;
+begin
+	repeat
+	writeln('Fumador 3 tiene los fosforos');	
+	
+		wait(espera3);			{El fumador 3 espera a que el agente haya puesto el tabaco y papel}
+	
+	writeln('Fumador 3 termina de fumar ');
+		
+	signal(otraronda);
+	forever
+end;
+
+process Agente;
+	var ingrediente : integer;
+begin
+	repeat	
+	wait(otraronda);
+	ingrediente := random(2)+1;
+	if ingrediente = 1 then
+	begin
+		
+		writeln('Agente coloca tabaco y papel');		{Le da permiso al fumador 3}
+		signal(espera3);
+		
+	end		
+	else
+		begin
+			if ingrediente = 2 then
+			begin
+			
+			writeln('Agente coloca fosforos y papel');		{Le da permiso al fumador 1}
+			signal(espera1);
+			end
+			else
+				begin
+					
+					writeln('Agente coloca tabaco y fosforos');
+					signal(espera2);				{Le da permiso al fumador 2}	
+					
+				end
+		end;		
+	forever;
+end;
+
+
+begin
+	initial(otraronda,1);	{El agente comenzara colocando dos objetos aleatorios}
+	initial(espera1,0);
+	initial(espera2,0);
+	initial(espera3,0);
+	cobegin
+		F3;
+		F2;
+		F1;
+		Agente;
+	coend;
+	
+	
+end.
